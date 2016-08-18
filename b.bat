@@ -1,0 +1,1 @@
+ml.exe /coff funky.asm /link /subsystem:windows
