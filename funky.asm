@@ -42,18 +42,6 @@
 ; local macros
 ;----------------------------------------------------------------------------
 
-        szText  MACRO   Name, Text:VARARG
-                LOCAL   lbl
-                jmp     lbl
-                Name    db  Text,0
-            lbl:
-        ENDM
-
-        m2m     MACRO   M1, M2
-                push    m1
-                pop     m2
-        ENDM
-
         return  MACRO   arg
                 mov     eax, arg
                 ret
