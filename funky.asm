@@ -151,8 +151,12 @@ start:
         mov     wc.hbrBackground, eax
         invoke  RegisterClassA, ADDR wc
 
-        invoke  CreateWindowExA, WS_EX_TOPMOST, ADDR szClassName,
-                ADDR szDispName, WS_POPUP, 0, 0, 320, 200, 0, 0, hInst, 0
+        invoke  CreateWindowExA, 0, ADDR szClassName,
+        ADDR szDispName,
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT, 320, 200,
+        0, 0, hInst, 0
+
         cmp     eax, 0
         je      done
         mov     hWnd, eax
@@ -160,10 +164,6 @@ start:
         invoke  ShowWindow, hWnd, SW_SHOWNORMAL
         invoke  UpdateWindow, hWnd
         invoke  ShowCursor, 0
-
-        invoke  ClientToScreen, hWnd, ADDR pPoint
-        invoke  GetClientRect, hWnd, ADDR rRect
-        invoke  OffsetRect, ADDR rRect, pPoint.x, pPoint.y
 
 ;;; set up direct draw surfaces
 
@@ -341,6 +341,12 @@ mainloop:
 
         ; unlock surface
         DDSINVOKE Unlock, lpDDSb, NULL
+
+        mov     pPoint.x, 0
+        mov     pPoint.y, 0
+        invoke  ClientToScreen, hWnd, ADDR pPoint
+        invoke  GetClientRect, hWnd, ADDR rRect
+        invoke  OffsetRect, ADDR rRect, pPoint.x, pPoint.y
 
         ; copy back buffer to primary surface
         DDSINVOKE Blt, lpDDSp, ADDR rRect, lpDDSb, NULL, 0, NULL
