@@ -65,8 +65,8 @@
 ; equates
 ;----------------------------------------------------------------------------
 
-WINDOW_WIDTH    EQU         320
-WINDOW_HEIGHT   EQU         200
+BUF_WIDTH       EQU         320
+BUF_HEIGHT      EQU         200
 
 ;----------------------------------------------------------------------------
 
@@ -118,12 +118,12 @@ temp1           DW                  ?
 temp2           DW                  ?
 
 ; lines data
-arctan          DB                  (WINDOW_WIDTH*2)*(WINDOW_HEIGHT*2) dup (?)
+arctan          DB                  (BUF_WIDTH*2)*(BUF_HEIGHT*2) dup (?)
 cos             SDWORD              256 dup (?)
 sin             SDWORD              256 dup (?)
 pal             DD                  256 dup (?)
 
-yoffstab        DD                  WINDOW_HEIGHT*2 dup (?)
+yoffstab        DD                  BUF_HEIGHT*2 dup (?)
 
 
 ;----------------------------------------------------------------------------
@@ -148,7 +148,7 @@ start:
         invoke  CreateWindowExA, 0, ADDR szClassName,
         ADDR szDispName,
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, WINDOW_WIDTH, WINDOW_HEIGHT,
+        CW_USEDEFAULT, CW_USEDEFAULT, BUF_WIDTH * 2, BUF_HEIGHT * 2,
         0, 0, hInst, 0
 
         cmp     eax, 0
@@ -188,8 +188,8 @@ start:
         invoke  RtlZeroMemory, ADDR ddsd, SIZEOF DDSURFACEDESC
 
         mov     ddsd.dwFlags, DDSD_WIDTH OR DDSD_HEIGHT
-        mov     ddsd.dwWidth, WINDOW_WIDTH
-        mov     ddsd.dwHeight, WINDOW_HEIGHT
+        mov     ddsd.dwWidth, BUF_WIDTH
+        mov     ddsd.dwHeight, BUF_HEIGHT
         mov     ddsd.dwSize, SIZEOF DDSURFACEDESC
         DDINVOKE CreateSurface, lpDD, ADDR ddsd, ADDR lpDDSb, NULL
         .if eax != DD_OK
@@ -229,7 +229,7 @@ mainloop:
         mov     ebx, index
         mov     eax, dword ptr sin[ebx*4]
         mov     ebx, dword ptr cos[ebx*4]
-        mov     ebp, WINDOW_WIDTH
+        mov     ebp, BUF_WIDTH
         mov     ecx, 0
         mov     esi, offset arctan
 
@@ -239,7 +239,7 @@ mainloop:
 
     lineloop:
         mov     esi, ecx
-        add     esi, WINDOW_HEIGHT / 2
+        add     esi, BUF_HEIGHT / 2
         add     esi, eax
         mov     esi, dword ptr yoffstab[esi*4]
         add     esi, ebp
@@ -249,7 +249,7 @@ mainloop:
         shl     dl, 1
 
         mov     esi, ecx
-        add     esi, WINDOW_HEIGHT / 2
+        add     esi, BUF_HEIGHT / 2
         add     esi, eax
         mov     esi, dword ptr yoffstab[esi*4]
         add     esi, ebp
@@ -258,7 +258,7 @@ mainloop:
         sub     dl, byte ptr arctan[esi]
 
         mov     esi, ecx
-        add     esi, WINDOW_HEIGHT / 2
+        add     esi, BUF_HEIGHT / 2
         add     esi, ebx
         mov     esi, dword ptr yoffstab[esi*4]
         add     esi, ebp
@@ -268,7 +268,7 @@ mainloop:
         add     dl, byte ptr arctan[esi]
 
         mov     esi, ecx
-        add     esi, WINDOW_HEIGHT / 2
+        add     esi, BUF_HEIGHT / 2
         add     esi, ebx
         mov     esi, dword ptr yoffstab[esi*4]
         add     esi, ebp
@@ -278,7 +278,7 @@ mainloop:
         add     dl, byte ptr arctan[esi]
 
         mov     esi, ecx
-        add     esi, WINDOW_HEIGHT / 2
+        add     esi, BUF_HEIGHT / 2
         add     esi, ebx
         mov     esi, dword ptr yoffstab[esi*4]
         add     esi, ebp
@@ -287,7 +287,7 @@ mainloop:
         sub     dl, byte ptr arctan[esi]
 
         mov     esi, ecx
-        add     esi, WINDOW_HEIGHT / 2
+        add     esi, BUF_HEIGHT / 2
         sub     esi, eax
         mov     esi, dword ptr yoffstab[esi*4]
         add     esi, ebp
@@ -296,7 +296,7 @@ mainloop:
         add     dl, byte ptr arctan[esi]
 
         ;mov     esi, ecx
-        ;add     esi, WINDOW_HEIGHT / 2
+        ;add     esi, BUF_HEIGHT / 2
         ;sub     esi, eax
         ;mov     esi, dword ptr yoffstab[esi*4]
         ;add     esi, ebp
@@ -315,10 +315,10 @@ mainloop:
         dec     ebp
         jnz     lineloop
 
-        mov     ebp, WINDOW_WIDTH
+        mov     ebp, BUF_WIDTH
 
         inc     ecx
-        cmp     ecx, WINDOW_HEIGHT
+        cmp     ecx, BUF_HEIGHT
         jne     lineloop
 
         pop     ebp
@@ -357,17 +357,17 @@ initTables PROC
         xor     eax, eax
     yoffsloop:
         stosd
-        add     eax, WINDOW_WIDTH * 2
+        add     eax, BUF_WIDTH * 2
         loop    yoffsloop
 
         mov     edi, offset arctan
-        mov     ecx, WINDOW_WIDTH * 2
-        mov     eax, WINDOW_HEIGHT * 2
+        mov     ecx, BUF_WIDTH * 2
+        mov     eax, BUF_HEIGHT * 2
     arctanloop:
         mov     ebx, eax
-        sub     ebx, WINDOW_HEIGHT
+        sub     ebx, BUF_HEIGHT
         mov     edx, ecx
-        sub     edx, WINDOW_WIDTH
+        sub     edx, BUF_WIDTH
 
         mov     temp1, dx
         mov     temp2, bx
@@ -385,7 +385,7 @@ initTables PROC
         dec     ecx
         jnz     arctanloop
 
-        mov     ecx, WINDOW_WIDTH * 2
+        mov     ecx, BUF_WIDTH * 2
 
         dec     eax
         jnz     arctanloop     
