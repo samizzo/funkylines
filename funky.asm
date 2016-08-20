@@ -62,6 +62,13 @@
 
 
 ;----------------------------------------------------------------------------
+; equates
+;----------------------------------------------------------------------------
+
+WINDOW_WIDTH    EQU         320
+WINDOW_HEIGHT   EQU         200
+
+;----------------------------------------------------------------------------
 
 
 ;----------------------------------------------------------------------------
@@ -111,23 +118,13 @@ temp1           DW                  ?
 temp2           DW                  ?
 
 ; lines data
-arctan          DB                  640*401 dup (?)
+arctan          DB                  (WINDOW_WIDTH*2)*(WINDOW_HEIGHT*2) dup (?)
 cos             SDWORD              256 dup (?)
 sin             SDWORD              256 dup (?)
 pal             DD                  256 dup (?)
 
-yoffstab        DD                  400 dup (?)
-;----------------------------------------------------------------------------
+yoffstab        DD                  WINDOW_HEIGHT*2 dup (?)
 
-
-;----------------------------------------------------------------------------
-; equates
-;----------------------------------------------------------------------------
-
-FALSE           EQU         0
-TRUE            EQU         1
-WINDOW_WIDTH    EQU         320
-WINDOW_HEIGHT   EQU         200
 
 ;----------------------------------------------------------------------------
 
@@ -233,7 +230,7 @@ mainloop:
         mov     eax, dword ptr sin[ebx*4]
         mov     ebx, dword ptr cos[ebx*4]
         mov     ebp, WINDOW_WIDTH
-        mov     ecx, 100d
+        mov     ecx, 0
         mov     esi, offset arctan
 
         ; eax = sin(index)
@@ -242,6 +239,7 @@ mainloop:
 
     lineloop:
         mov     esi, ecx
+        add     esi, WINDOW_HEIGHT / 2
         add     esi, eax
         mov     esi, dword ptr yoffstab[esi*4]
         add     esi, ebp
@@ -251,6 +249,7 @@ mainloop:
         shl     dl, 1
 
         mov     esi, ecx
+        add     esi, WINDOW_HEIGHT / 2
         add     esi, eax
         mov     esi, dword ptr yoffstab[esi*4]
         add     esi, ebp
@@ -259,6 +258,7 @@ mainloop:
         sub     dl, byte ptr arctan[esi]
 
         mov     esi, ecx
+        add     esi, WINDOW_HEIGHT / 2
         add     esi, ebx
         mov     esi, dword ptr yoffstab[esi*4]
         add     esi, ebp
@@ -268,6 +268,7 @@ mainloop:
         add     dl, byte ptr arctan[esi]
 
         mov     esi, ecx
+        add     esi, WINDOW_HEIGHT / 2
         add     esi, ebx
         mov     esi, dword ptr yoffstab[esi*4]
         add     esi, ebp
@@ -277,6 +278,7 @@ mainloop:
         add     dl, byte ptr arctan[esi]
 
         mov     esi, ecx
+        add     esi, WINDOW_HEIGHT / 2
         add     esi, ebx
         mov     esi, dword ptr yoffstab[esi*4]
         add     esi, ebp
@@ -285,6 +287,7 @@ mainloop:
         sub     dl, byte ptr arctan[esi]
 
         mov     esi, ecx
+        add     esi, WINDOW_HEIGHT / 2
         sub     esi, eax
         mov     esi, dword ptr yoffstab[esi*4]
         add     esi, ebp
@@ -293,6 +296,7 @@ mainloop:
         add     dl, byte ptr arctan[esi]
 
         ;mov     esi, ecx
+        ;add     esi, WINDOW_HEIGHT / 2
         ;sub     esi, eax
         ;mov     esi, dword ptr yoffstab[esi*4]
         ;add     esi, ebp
@@ -314,7 +318,7 @@ mainloop:
         mov     ebp, WINDOW_WIDTH
 
         inc     ecx
-        cmp     ecx, 300d
+        cmp     ecx, WINDOW_HEIGHT
         jne     lineloop
 
         pop     ebp
