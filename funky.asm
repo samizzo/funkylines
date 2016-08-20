@@ -131,6 +131,8 @@ yoffstab        DD                  400 dup (?)
 
 FALSE           EQU         0
 TRUE            EQU         1
+WINDOW_WIDTH    EQU         320
+WINDOW_HEIGHT   EQU         200
 
 ;----------------------------------------------------------------------------
 
@@ -154,7 +156,7 @@ start:
         invoke  CreateWindowExA, 0, ADDR szClassName,
         ADDR szDispName,
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 320, 200,
+        CW_USEDEFAULT, CW_USEDEFAULT, WINDOW_WIDTH, WINDOW_HEIGHT,
         0, 0, hInst, 0
 
         cmp     eax, 0
@@ -194,8 +196,8 @@ start:
         invoke  RtlZeroMemory, ADDR ddsd, SIZEOF DDSURFACEDESC
 
         mov     ddsd.dwFlags, DDSD_WIDTH OR DDSD_HEIGHT
-        mov     ddsd.dwWidth, 320
-        mov     ddsd.dwHeight, 200
+        mov     ddsd.dwWidth, WINDOW_WIDTH
+        mov     ddsd.dwHeight, WINDOW_HEIGHT
         mov     ddsd.dwSize, SIZEOF DDSURFACEDESC
         DDINVOKE CreateSurface, lpDD, ADDR ddsd, ADDR lpDDSb, NULL
         .if eax != DD_OK
@@ -248,7 +250,7 @@ mainloop:
             mov     ebx, index
             mov     eax, dword ptr sin[ebx*4]
             mov     ebx, dword ptr cos[ebx*4]
-            mov     ebp, 320d
+            mov     ebp, WINDOW_WIDTH
             mov     ecx, 100d
             mov     esi, offset arctan
 
@@ -327,7 +329,7 @@ mainloop:
             dec     ebp
             jnz     lineloop
 
-            mov     ebp, 320d
+            mov     ebp, WINDOW_WIDTH
 
             inc     ecx
             cmp     ecx, 300d
@@ -378,9 +380,9 @@ initTables PROC
         mov     eax, 400d
     arctanloop:
         mov     ebx, eax
-        sub     ebx, 200d
+        sub     ebx, WINDOW_HEIGHT
         mov     edx, ecx
-        sub     edx, 320d
+        sub     edx, WINDOW_WIDTH
 
         mov     temp1, dx
         mov     temp2, bx
