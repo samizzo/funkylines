@@ -78,7 +78,9 @@ seed            DD                  12345678h
 wc              WNDCLASS            <CS_HREDRAW+CS_VREDRAW, offset WndProc, \
                                     0, 0, 0, 0, 0, 0, 0, offset szClassName>
 szClassName     DB                  "DDTest", 0
-szDispName      DB                  "DirectX test program", 0
+szDispName      DB                  "Funkylines", 0
+
+pPoint          POINT               <0, 0>
 
 ; direct draw data
 stretch         DB                  FALSE
@@ -95,6 +97,8 @@ sinmul          DW                  70 ;80
 ;----------------------------------------------------------------------------
 
         .DATA?
+
+rRect           RECT                <?>
 
 hInst           HANDLE              ?
 hWnd            HWND                ?
@@ -157,6 +161,10 @@ start:
         invoke  UpdateWindow, hWnd
         invoke  ShowCursor, 0
 
+        invoke  ClientToScreen, hWnd, ADDR pPoint
+        invoke  GetClientRect, hWnd, ADDR rRect
+        invoke  OffsetRect, ADDR rRect, pPoint.x, pPoint.y
+
 ;;; set up direct draw surfaces
 
         ; create direct draw object
@@ -166,39 +174,32 @@ start:
         .endif
 
         ; set exclusive and fullscreen cooperative level
-        DDINVOKE SetCooperativeLevel, lpDD, hWnd, DDSCL_EXCLUSIVE OR DDSCL_FULLSCREEN
+        DDINVOKE SetCooperativeLevel, lpDD, hWnd, DDSCL_NORMAL
         .if eax != DD_OK
             fatal "Couldn't set cooperative level"
         .endif
 
-        ; set new video mode
-        DDINVOKE SetDisplayMode, lpDD, 320, 200, 16
-        .if eax == DDERR_INVALIDMODE
-            DDINVOKE SetDisplayMode, lpDD, 640, 480, 16
-            .if eax != DD_OK
-                fatal "Couldn't set display mode (tried 320x200x16bpp and 640x480x16bpp)"
-            .endif
-            mov stretch, TRUE
-        .elseif eax != DD_OK
-            fatal "Couldn't set display mode"
-        .endif
+        ; create primary surface
+        invoke  RtlZeroMemory, ADDR ddsd, SIZEOF DDSURFACEDESC
 
-        ; create primary surface with one backbuffer
-        mov     ddsd.dwFlags, DDSD_CAPS OR DDSD_BACKBUFFERCOUNT
-        mov     ddsd.ddsCaps.dwCaps, DDSCAPS_PRIMARYSURFACE OR DDSCAPS_FLIP OR \
-                                     DDSCAPS_COMPLEX OR DDSCAPS_VIDEOMEMORY
-        mov     ddsd.dwBackBufferCount, 1
+        mov     ddsd.dwFlags, DDSD_CAPS
+        mov     ddsd.ddsCaps.dwCaps, DDSCAPS_PRIMARYSURFACE
         mov     ddsd.dwSize, SIZEOF DDSURFACEDESC
         DDINVOKE CreateSurface, lpDD, ADDR ddsd, ADDR lpDDSp, NULL
         .if eax != DD_OK
             fatal "Couldn't create primary surface"
         .endif
 
-        ; get attached surface (back buffer)
-        mov     ddscaps.dwCaps, DDSCAPS_BACKBUFFER
-        DDSINVOKE GetAttachedSurface, lpDDSp, ADDR ddscaps, ADDR lpDDSb
+        ; create back buffer surface
+        invoke  RtlZeroMemory, ADDR ddsd, SIZEOF DDSURFACEDESC
+
+        mov     ddsd.dwFlags, DDSD_WIDTH OR DDSD_HEIGHT
+        mov     ddsd.dwWidth, 320
+        mov     ddsd.dwHeight, 200
+        mov     ddsd.dwSize, SIZEOF DDSURFACEDESC
+        DDINVOKE CreateSurface, lpDD, ADDR ddsd, ADDR lpDDSb, NULL
         .if eax != DD_OK
-            fatal "Couldn't get attached surface"
+            fatal "Couldn't create back buffer surface"
         .endif
 
         ; get pixel format
@@ -341,8 +342,8 @@ mainloop:
         ; unlock surface
         DDSINVOKE Unlock, lpDDSb, NULL
 
-        ; flip surfaces
-        DDSINVOKE Flip, lpDDSp, NULL, DDFLIP_WAIT
+        ; copy back buffer to primary surface
+        DDSINVOKE Blt, lpDDSp, ADDR rRect, lpDDSb, NULL, 0, NULL
 
         jmp     mainloop
 
