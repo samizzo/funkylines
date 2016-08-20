@@ -71,7 +71,6 @@
         .DATA
 
 index           DD                  0
-redShift        DD                  11
 
 seed            DD                  12345678h
 
@@ -119,7 +118,7 @@ temp2           DW                  ?
 arctan          DB                  640*401 dup (?)
 cos             SDWORD              256 dup (?)
 sin             SDWORD              256 dup (?)
-pal             DW                  256 dup (?)
+pal             DD                  256 dup (?)
 
 yoffstab        DD                  400 dup (?)
 ;----------------------------------------------------------------------------
@@ -202,17 +201,6 @@ start:
         DDINVOKE CreateSurface, lpDD, ADDR ddsd, ADDR lpDDSb, NULL
         .if eax != DD_OK
             fatal "Couldn't create back buffer surface"
-        .endif
-
-        ; get pixel format
-        mov     ddpf.dwSize, SIZEOF DDPIXELFORMAT
-        DDSINVOKE GetPixelFormat, lpDDSp, ADDR ddpf
-        .if eax != DD_OK
-            fatal "Couldn't get pixel format"
-        .endif
-
-        .if ddpf.dwGBitMask != 7e0h
-            mov redShift, 10
         .endif
 
         call    initTables
@@ -321,10 +309,10 @@ mainloop:
             add     dl, bl
             and     edx, 0ffh
 
-            mov     dx, word ptr pal[edx*2]
-            mov     [edi], dx
+            mov     edx, dword ptr pal[edx*4]
+            mov     [edi], edx
 
-            add     edi, 2
+            add     edi, 4
 
             dec     ebp
             jnz     lineloop
@@ -425,16 +413,15 @@ initTables PROC
 
         xor     esi, esi
         mov     edi, offset pal
-        mov     ecx, redShift
 
     palloop:
         ; r=0, g=159, b=255 to r=3, g=189, b=40
-        ; pal[i] = ((20+(4*i >> 5)) << 5) + (31+(-27*i >> 5));
+        ; pal[i] = ((20+(4*i >> 5)) << 16) + (31+(-27*i >> 5));
         mov     eax, esi
         imul    eax, 4
         sar     eax, 5
         add     eax, 20
-        shl     eax, 5
+        shl     eax, 16
         push    eax             ; save red
         mov     eax, esi
         imul    eax, -27
@@ -443,20 +430,20 @@ initTables PROC
         pop     edx
         add     eax, edx
         mov     ebx, esi
-        mov     [edi], ax
+        mov     [edi], eax
 
         ; r=3, g=189, b=40 to r=227, g=245, b=3
-        ; pal[32+i] = ((28*i >> 5) << redShift) + ((23+(7*i >> 5)) << 5) + (5+(-5*i >> 5));
+        ; pal[32+i] = ((28*i >> 5) << 16) + ((23+(7*i >> 5)) << 8) + (5+(-5*i >> 5));
         mov     eax, esi
         imul    eax, 28
         sar     eax, 5
-        shl     eax, cl
+        shl     eax, 16
         push    eax             ; save red
         mov     eax, esi
         imul    eax, 7
         sar     eax, 5
         add     eax, 23
-        shl     eax, 5
+        shl     eax, 8
         push    eax             ; save green
         mov     eax, esi
         imul    eax, -5
@@ -466,21 +453,21 @@ initTables PROC
         add     eax, edx
         pop     edx
         add     eax, edx
-        mov     [edi+32*2], ax
+        mov     [edi+32*4], eax
 
         ; r=227, g=245, b=3 to r=251, g=173, b=102
-        ; pal[64+i] = ((28+(3*i >> 5)) << redShift) + ((30+(-9*i >> 5)) << 5) + (12*i >> 5);
+        ; pal[64+i] = ((28+(3*i >> 5)) << 16) + ((30+(-9*i >> 5)) << 8) + (12*i >> 5);
         mov     eax, esi
         imul    eax, 3
         sar     eax, 5
         add     eax, 28
-        shl     eax, cl
+        shl     eax, 16
         push    eax             ; save red
         mov     eax, esi
         imul    eax, -9
         sar     eax, 5
         add     eax, 30
-        shl     eax, 5
+        shl     eax, 8
         push    eax             ; save green
         mov     eax, esi
         add     eax, 12
@@ -489,21 +476,21 @@ initTables PROC
         add     eax, edx
         pop     edx
         add     eax, edx
-        mov     [edi+64*2], ax
+        mov     [edi+64*4], eax
 
         ; r=251, g=173, b=102 to r=232, g=0, b=40
-        ; pal[96+i] = ((31+(-2*i >> 5)) << redShift) + ((22+(-22*i >> 5)) << 5) + (12+(-8*i >> 5));
+        ; pal[96+i] = ((31+(-2*i >> 5)) << 16) + ((22+(-22*i >> 5)) << 8) + (12+(-8*i >> 5));
         mov     eax, esi
         imul    eax, -2
         sar     eax, 5
         add     eax, 31
-        shl     eax, cl
+        shl     eax, 16
         push    eax             ; save red
         mov     eax, esi
         imul    eax, -22
         sar     eax, 5
         add     eax, 22
-        shl     eax, 5
+        shl     eax, 8
         push    eax             ; save green
         mov     eax, esi
         imul    eax, -8
@@ -513,20 +500,20 @@ initTables PROC
         add     eax, edx
         pop     edx
         add     eax, edx
-        mov     [edi+96*2], ax
+        mov     [edi+96*4], eax
 
         ; r=232, g=0, b=40 to r=206, g=22, b=233
-        ; pal[128+i] = ((29+(-3*i >> 5)) << redShift) + ((3*i >> 5) << 5) + (4+(24*i >> 5));
+        ; pal[128+i] = ((29+(-3*i >> 5)) << 16) + ((3*i >> 5) << 8) + (4+(24*i >> 5));
         mov     eax, esi
         imul    eax, -3
         sar     eax, 5
         add     eax, 29
-        shl     eax, cl
+        shl     eax, 16
         push    eax             ; save red
         mov     eax, esi
         imul    eax, 3
         sar     eax, 5
-        shl     eax, 5
+        shl     eax, 8
         push    eax             ; save green
         mov     eax, esi
         imul    eax, 24
@@ -536,21 +523,21 @@ initTables PROC
         add     eax, edx
         pop     edx
         add     eax, edx
-        mov     [edi+128*2], ax
+        mov     [edi+128*4], eax
 
         ; r=206, g=22, b=233 to r=133, g=15, b=240
-        ; pal[160+i] = ((26+(-9*i >> 5)) << redShift) + ((3+(-i >> 5)) << 5) + (28+(i >> 5));
+        ; pal[160+i] = ((26+(-9*i >> 5)) << 16) + ((3+(-i >> 5)) << 8) + (28+(i >> 5));
         mov     eax, esi
         imul    eax, -9
         sar     eax, 5
         add     eax, 26
-        shl     eax, cl
+        shl     eax, 16
         push    eax             ; save red
         mov     eax, esi
         neg     eax
         sar     eax, 5
         add     eax, 3
-        shl     eax, 5
+        shl     eax, 8
         push    eax             ; save green
         mov     eax, esi
         sar     eax, 5
@@ -559,21 +546,21 @@ initTables PROC
         add     eax, edx
         pop     edx
         add     eax, edx
-        mov     [edi+160*2], ax
+        mov     [edi+160*4], eax
 
         ; r=133, g=15, b=240 to r=50, g=120, b=205
-        ; pal[192+i] = ((17+(-10*i >> 5)) << redShift) + ((2+(13*i >> 5)) << 5) + (29+(-4*i >> 5));
+        ; pal[192+i] = ((17+(-10*i >> 5)) << 16) + ((2+(13*i >> 5)) << 8) + (29+(-4*i >> 5));
         mov     eax, esi
         imul    eax, -10
         sar     eax, 5
         add     eax, 17
-        shl     eax, cl
+        shl     eax, 16
         push    eax             ; save red
         mov     eax, esi
         imul    eax, 13
         sar     eax, 5
         add     eax, 2
-        shl     eax, 5
+        shl     eax, 8
         push    eax             ; save green
         mov     eax, esi
         imul    eax, -4
@@ -583,21 +570,21 @@ initTables PROC
         add     eax, edx
         pop     edx
         add     eax, edx
-        mov     [edi+192*2], ax
+        mov     [edi+192*4], eax
 
         ; r=60, g=120, b=205 to r=0, g=159, b=255
-        ; pal[224+i] = ((8+(-8*i >> 5)) << redShift) + ((15+(5*i >> 5)) << 5) + (26+(6*i >> 5));
+        ; pal[224+i] = ((8+(-8*i >> 5)) << 16) + ((15+(5*i >> 5)) << 8) + (26+(6*i >> 5));
         mov     eax, esi
         imul    eax, -8
         sar     eax, 5
         add     eax, 8
-        shl     eax, cl
+        shl     eax, 16
         push    eax             ; save red
         mov     eax, esi
         imul    eax, 5
         sar     eax, 5
         add     eax, 15
-        shl     eax, 5
+        shl     eax, 8
         push    eax             ; save green
         mov     eax, esi
         imul    eax, 6
@@ -607,9 +594,9 @@ initTables PROC
         add     eax, edx
         pop     edx
         add     eax, edx
-        mov     [edi+224*2], ax
+        mov     [edi+224*4], eax
 
-        add     edi, 2
+        add     edi, 4
 
         inc     esi
         cmp     esi, 32
