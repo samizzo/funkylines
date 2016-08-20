@@ -372,12 +372,12 @@ initTables PROC
         xor     eax, eax
     yoffsloop:
         stosd
-        add     eax, 640d
+        add     eax, WINDOW_WIDTH * 2
         loop    yoffsloop
 
         mov     edi, offset arctan
-        mov     ecx, 640d
-        mov     eax, 400d
+        mov     ecx, WINDOW_WIDTH * 2
+        mov     eax, WINDOW_HEIGHT * 2
     arctanloop:
         mov     ebx, eax
         sub     ebx, WINDOW_HEIGHT
@@ -400,7 +400,7 @@ initTables PROC
         dec     ecx
         jnz     arctanloop
 
-        mov     ecx, 640d
+        mov     ecx, WINDOW_WIDTH * 2
 
         dec     eax
         jnz     arctanloop     
