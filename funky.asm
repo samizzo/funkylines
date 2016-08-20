@@ -78,6 +78,7 @@ BUF_HEIGHT      EQU         200
         .DATA
 
 index           DD                  0
+ticks           DD                  0
 
 seed            DD                  12345678h
 
@@ -199,6 +200,9 @@ start:
         call    initTables
 
 ;;; message loop (main body of code)
+
+        invoke  GetTickCount
+        mov     ticks, eax
 
 mainloop:
         invoke  PeekMessageA, ADDR msg, 0, 0, 0, PM_REMOVE
@@ -324,8 +328,6 @@ mainloop:
         pop     ebp
 
 ;here:
-        inc     byte ptr index
-
         ; unlock surface
         DDSINVOKE Unlock, lpDDSb, NULL
 
@@ -337,6 +339,19 @@ mainloop:
 
         ; copy back buffer to primary surface
         DDSINVOKE Blt, lpDDSp, ADDR rRect, lpDDSb, NULL, 0, NULL
+
+        ; calculate delta ticks
+        invoke  GetTickCount
+        mov     ebx, ticks
+        mov     ticks, eax
+        sub     eax, ebx
+
+        ; rather than do a floating point divide to calculate the ticks in
+        ; seconds, just scale it down a bit.
+        shr     eax, 3
+
+        add     index, eax
+        and     index, 255
 
         jmp     mainloop
 
