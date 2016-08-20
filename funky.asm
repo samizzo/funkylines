@@ -81,10 +81,6 @@ szDispName      DB                  "Funkylines", 0
 
 pPoint          POINT               <0, 0>
 
-; direct draw data
-stretch         DB                  FALSE
-
-
 deg             DW                  256
 deg2            DW                  128
 cosmul          DW                  60 ;90
@@ -231,101 +227,98 @@ mainloop:
 
         ; edi = surface pointer
 
-;        .if stretch == TRUE
-;        .else
-            push    ebp
+        push    ebp
 
-            mov     ebx, index
-            mov     eax, dword ptr sin[ebx*4]
-            mov     ebx, dword ptr cos[ebx*4]
-            mov     ebp, WINDOW_WIDTH
-            mov     ecx, 100d
-            mov     esi, offset arctan
+        mov     ebx, index
+        mov     eax, dword ptr sin[ebx*4]
+        mov     ebx, dword ptr cos[ebx*4]
+        mov     ebp, WINDOW_WIDTH
+        mov     ecx, 100d
+        mov     esi, offset arctan
 
-            ; eax = sin(index)
-            ; ebx = cos(index)
-            ; ebp = i, ecx = j
+        ; eax = sin(index)
+        ; ebx = cos(index)
+        ; ebp = i, ecx = j
 
-        lineloop:
-            mov     esi, ecx
-            add     esi, eax
-            mov     esi, dword ptr yoffstab[esi*4]
-            add     esi, ebp
-            add     esi, ebx
-            add     esi, 210d ;160d
-            mov     dl, byte ptr arctan[esi]
-            shl     dl, 1
+    lineloop:
+        mov     esi, ecx
+        add     esi, eax
+        mov     esi, dword ptr yoffstab[esi*4]
+        add     esi, ebp
+        add     esi, ebx
+        add     esi, 210d ;160d
+        mov     dl, byte ptr arctan[esi]
+        shl     dl, 1
 
-            mov     esi, ecx
-            add     esi, eax
-            mov     esi, dword ptr yoffstab[esi*4]
-            add     esi, ebp
-            add     esi, eax
-            add     esi, 190d ;160-40d
-            sub     dl, byte ptr arctan[esi]
+        mov     esi, ecx
+        add     esi, eax
+        mov     esi, dword ptr yoffstab[esi*4]
+        add     esi, ebp
+        add     esi, eax
+        add     esi, 190d ;160-40d
+        sub     dl, byte ptr arctan[esi]
 
-            mov     esi, ecx
-            add     esi, ebx
-            mov     esi, dword ptr yoffstab[esi*4]
-            add     esi, ebp
-            add     esi, eax
-            add     esi, 110d ;160d
-            add     dl, byte ptr arctan[esi]
-            add     dl, byte ptr arctan[esi]
+        mov     esi, ecx
+        add     esi, ebx
+        mov     esi, dword ptr yoffstab[esi*4]
+        add     esi, ebp
+        add     esi, eax
+        add     esi, 110d ;160d
+        add     dl, byte ptr arctan[esi]
+        add     dl, byte ptr arctan[esi]
 
-            mov     esi, ecx
-            add     esi, ebx
-            mov     esi, dword ptr yoffstab[esi*4]
-            add     esi, ebp
-            sub     esi, ebx
-            add     esi, 160d; 160+30d
-            add     dl, byte ptr arctan[esi]
-            add     dl, byte ptr arctan[esi]
+        mov     esi, ecx
+        add     esi, ebx
+        mov     esi, dword ptr yoffstab[esi*4]
+        add     esi, ebp
+        sub     esi, ebx
+        add     esi, 160d; 160+30d
+        add     dl, byte ptr arctan[esi]
+        add     dl, byte ptr arctan[esi]
 
-            mov     esi, ecx
-            add     esi, ebx
-            mov     esi, dword ptr yoffstab[esi*4]
-            add     esi, ebp
-            add     esi, eax
-            add     esi, 160+30+10d
-            sub     dl, byte ptr arctan[esi]
+        mov     esi, ecx
+        add     esi, ebx
+        mov     esi, dword ptr yoffstab[esi*4]
+        add     esi, ebp
+        add     esi, eax
+        add     esi, 160+30+10d
+        sub     dl, byte ptr arctan[esi]
 
-            mov     esi, ecx
-            sub     esi, eax
-            mov     esi, dword ptr yoffstab[esi*4]
-            add     esi, ebp
-            add     esi, eax
-            add     esi, 140d
-            add     dl, byte ptr arctan[esi]
+        mov     esi, ecx
+        sub     esi, eax
+        mov     esi, dword ptr yoffstab[esi*4]
+        add     esi, ebp
+        add     esi, eax
+        add     esi, 140d
+        add     dl, byte ptr arctan[esi]
 
-            ;mov     esi, ecx
-            ;sub     esi, eax
-            ;mov     esi, dword ptr yoffstab[esi*4]
-            ;add     esi, ebp
-            ;add     esi, eax
-            ;add     esi, 170d
-            ;add     dl, byte ptr arctan[esi]
+        ;mov     esi, ecx
+        ;sub     esi, eax
+        ;mov     esi, dword ptr yoffstab[esi*4]
+        ;add     esi, ebp
+        ;add     esi, eax
+        ;add     esi, 170d
+        ;add     dl, byte ptr arctan[esi]
 
-            add     dl, bl
-            and     edx, 0ffh
+        add     dl, bl
+        and     edx, 0ffh
 
-            mov     edx, dword ptr pal[edx*4]
-            mov     [edi], edx
+        mov     edx, dword ptr pal[edx*4]
+        mov     [edi], edx
 
-            add     edi, 4
+        add     edi, 4
 
-            dec     ebp
-            jnz     lineloop
+        dec     ebp
+        jnz     lineloop
 
-            mov     ebp, WINDOW_WIDTH
+        mov     ebp, WINDOW_WIDTH
 
-            inc     ecx
-            cmp     ecx, 300d
-            jne     lineloop
+        inc     ecx
+        cmp     ecx, 300d
+        jne     lineloop
 
-            pop     ebp
-;        .endif
-;
+        pop     ebp
+
 ;here:
         inc     byte ptr index
 
